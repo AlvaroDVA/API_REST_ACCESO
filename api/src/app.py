@@ -39,6 +39,8 @@ def obtenerNotas():
         if passw is None or idc is None:
             return jsonify({"message": "No hay credenciales"})
         
+
+        
         print("Obtener Notas")
         notas = nota_repo.obtener_notas_por_usuario(idc)
         if not notas:
@@ -79,12 +81,6 @@ def obtenerNotaPorId(id):
     except Exception as e:
         return jsonify({"error": f"{e}"}), 500  # Retorna el error 500 para indicar un error interno del servidor
 
-
-
-if __name__ == "__main__":
-    app.run(debug=True)
-
-
 # Nueva Nota    
 @app.route('/notas', methods=['POST'])
 def guardarNota():
@@ -100,7 +96,14 @@ def guardarNota():
         texto = data.get('texto')
         isTerminado = data.get('isTerminado')
         isImportante = data.get('isImportante')
+
+        # Verificar si hay campos adicionales en la solicitud
+        campos_extras = set(data.keys()) - {'titulo', 'texto', 'isTerminado', 'isImportante'}
+        if campos_extras:
+            return jsonify({"error": f"Campos no válidos en la solicitud: {', '.join(campos_extras)}"}), 400
         
+        
+        # Verificar que los datos tengan informacion
         if not titulo or not texto or isTerminado is None or isImportante is None:
             return jsonify({"error": "Faltan campos obligatorios en la solicitud"}), 400
         
@@ -130,7 +133,85 @@ def borrarNota(id):
         return jsonify({"error": f"{e}"}), 500  # Retorna el error 500 para indicar un error interno del servidor
 
 
+@app.route('/notas/delete_all', methods=['DELETE'])
+def borrarTodasLasNotas():
+    try:
+        confirmacion = request.json.get('confirmacion')
+        idc = request.headers.get('email')
+        passw = request.headers.get('pass')
+        confirmacion_bool = confirmacion.lower() == "true"
+
+        if not confirmacion_bool:
+            return jsonify({"error": "Confirmación requerida para eliminar todas las notas"}), 400
+
+        if not idc or not passw:
+            return jsonify({"error": "Credenciales incompletas"}), 400
+
+        # Verificar credenciales del usuario (aquí iría la lógica para verificar el usuario y la contraseña)
+        # if not verificar_credenciales(idc, passw):
+        #     return jsonify({"error": "Credenciales inválidas"}), 401
+
+        # Intentar borrar todas las notas del usuario
+        if nota_repo.delete_all_notas(idc, confirmacion_bool):
+            return jsonify({"message": "Todas las notas fueron eliminadas correctamente"})
+        else:
+            return jsonify({"message": "Borrado de todas las notas cancelado"})
+    except Exception as e:
+        return jsonify({"error": f"{e}"}), 500
+
+# Actualizar nota
+@app.route('/notas/<id>', methods=['PUT'])
+def actualizarNota(id):
+    try:
+        # Obtener el correo electrónico del usuario de los encabezados de la solicitud
+        idc = request.headers.get('email')
+        passw = request.headers.get('pass')
+        if passw is None or idc is None:
+            return jsonify({"error": "Credenciales incompletas"}), 400
+
+        # Obtener los datos de la nota del cuerpo de la solicitud
+        data = request.json
+        titulo = data.get('titulo')
+        texto = data.get('texto')
+        isTerminado = data.get('isTerminado')
+        isImportante = data.get('isImportante')
+
+        campos_extras = set(data.keys()) - {'titulo', 'texto', 'isTerminado', 'isImportante'}
+        if campos_extras:
+            return jsonify({"error": f"Campos no válidos en la solicitud: {', '.join(campos_extras)}"}), 400
+        
+        # Intentar actualizar la nota
+        if nota_repo.actualizar_nota(id, idc, titulo, texto, isTerminado, isImportante):
+            return jsonify({"message": "Nota actualizada correctamente"})
+        else:
+            return jsonify({"error": "No se ha encontrado la nota o no tienes permiso para actualizarla"})
+    except Exception as e:
+        return jsonify({"error": f"{e}"}), 500  # Retorna el error 500 para indicar un error interno del servidor
+
+@app.route('/notas/enviar/<id>', methods=['POST'])
+def enviarNota(id):
+    try:
+        # Obtener el email del encabezado
+        email = request.headers.get('email')
+        if email is None:
+            return jsonify({"error": "No se proporcionó el email en los encabezados"}), 400
+        
+        # Obtener los datos del cuerpo de la solicitud
+        data = request.json
+        email_destino = data.get('email_destino')
+        if email_destino is None:
+            return jsonify({"error": "No se proporcionó el email destino en el cuerpo de la solicitud"}), 400
+
+        # Llamar al repositorio de notas para enviar una copia de la nota
+        nueva_nota_id = nota_repo.enviar_nota(id, email, email_destino)
+
+        if nueva_nota_id:
+            return jsonify({"success": True, "nueva_nota_id": str(nueva_nota_id)}), 200
+        else:
+            return jsonify({"error": "No se pudo enviar la nota"}), 500
+    except Exception as e:
+        return jsonify({"error": f"Error interno del servidor: {e}"}), 500
+    
 
 if __name__ == '__main__':
     asyncio.run(debug=True)
-

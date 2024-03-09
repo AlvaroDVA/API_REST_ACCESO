@@ -7,8 +7,8 @@ class Nota:
         self.id = uuid.uuid4()
         self.titulo = titulo
         self.texto = texto
-        self.fechaCreacion = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
-        self.fechaUltimaModifcacion = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
+        self.fechaCreacion = datetime.now().strftime("%Y-%m-%d %H:%M")
+        self.fechaUltimaModifcacion = datetime.now().strftime("%Y-%m-%d %H:%M")
         self.isTerminado = isTerminado
         self.isImportante = isImportante
 
@@ -24,6 +24,6 @@ class Nota:
         }
     
     def updateFecha (self):
-        self.fechaUltimaModifcacion = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
+        self.fechaUltimaModifcacion = datetime.now().strftime("%Y-%m-%d %H:%M")
     
     

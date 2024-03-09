@@ -2,10 +2,10 @@ class Usuario:
     
     def __init__(self, email):
         self.email = email
-        self.pwd = []
+        self.note_list = []
 
     def getListaNotas(self):
-        return self.pwd;
+        return self.note_list
 
     def to_dict (self):
-        return {"email" : self.email, "pwd" : self.pwd } 
+        return {"email" : self.email, "pwd" : self.note_list } 
