@@ -32,3 +32,15 @@ services:
     depends_on:
       - mongodb
       - mariadb
+  api_graphql:
+    build:
+      context: ./api/
+      dockerfile: dockerfile_graphql
+    restart: on-failure
+    ports:
+      - 8051
+    environment:
+      - FLASK_RUN_PORT=8051
+    depends_on:
+      - mongodb
+      - mariadb
