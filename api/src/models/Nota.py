@@ -1,14 +1,21 @@
-import datetime
+from datetime import datetime
 import uuid
 
 class Nota:
 
-    def __init__(self,titulo, texto, isTerminado : bool, isImportante : bool):
-        self.id = uuid.uuid4()
+    def __init__(self
+                 , titulo
+                 , texto
+                 , isTerminado : bool
+                 , isImportante : bool
+                 , id = uuid.uuid4()
+                 , fechaCreacion = datetime.now().strftime("%Y-%m-%d %H:%M")
+                 , fechaUltimaModificacion = datetime.now().strftime("%Y-%m-%d %H:%M")):
+        self.id = id
         self.titulo = titulo
         self.texto = texto
-        self.fechaCreacion = datetime.now().strftime("%Y-%m-%d %H:%M")
-        self.fechaUltimaModifcacion = datetime.now().strftime("%Y-%m-%d %H:%M")
+        self.fechaCreacion = fechaCreacion
+        self.fechaUltimaModificacion = fechaUltimaModificacion
         self.isTerminado = isTerminado
         self.isImportante = isImportante
 
@@ -22,8 +29,5 @@ class Nota:
             "isTerminado": self.isTerminado,
             "isImportante": self.isImportante
         }
-    
-    def updateFecha (self):
-        self.fechaUltimaModifcacion = datetime.now().strftime("%Y-%m-%d %H:%M")
     
     

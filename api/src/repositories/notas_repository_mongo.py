@@ -18,7 +18,7 @@ class NotasRepositoryMongo:
             "titulo": titulo,
             "texto": texto,
             "fechaCreacion": fecha_actual.strftime("%Y-%m-%d %H:%M"),
-            "fechaUltimaModifcacion": fecha_actual.strftime("%Y-%m-%d %H:%M"),
+            "fechaUltimaModificacion": fecha_actual.strftime("%Y-%m-%d %H:%M"),
             "isTerminado": isTerminado,
             "isImportante": isImportante,
             "email_usuario": email_usuario
@@ -39,7 +39,7 @@ class NotasRepositoryMongo:
             return False  # La nota no pertenece al usuario, por lo que no se puede actualizar
 
         # Actualizar los datos de la nota
-        update_data = {"fechaUltimaModifcacion": datetime.now()}
+        update_data = {"fechaUltimaModificacion": datetime.now()}
         if titulo:
             update_data["titulo"] = titulo
         if texto:

@@ -342,7 +342,7 @@ def borrarUsuario():
 
         confirmacion = request.json.get('confirmacion')
         if confirmacion is None:
-            return jsonify({"message": "Falta la confirmacion de borrado 'True' "})
+            return jsonify({"message": "Falta la confirmacion de borrado 'True'"})
         confirmacion_bool = confirmacion.lower() == "true"
 
         # Validar las credenciales del usuario

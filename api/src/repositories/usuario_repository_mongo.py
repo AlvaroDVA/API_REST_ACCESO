@@ -28,7 +28,6 @@ class UsuarioRepostoryMongo:
     def validar_credenciales(self, email, password):
         return self.usuarios_collection.count_documents({"email": email, "password": password})
 
-
     def agregar_nota_a_usuario(self, email, nota_id):
 
         usuario = self.obtener_usuario_por_email(email)
