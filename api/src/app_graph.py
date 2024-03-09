@@ -5,7 +5,6 @@ import graphene
 from graphene import Mutation
 from mappers.mappers import NotaMapper
 
-# Importa las clases y funciones necesarias desde otros archivos
 from models.NotaType import NotaType
 from repositories.notas_repository_maria import NotasRepositoryMaria
 from repositories.notas_repository_mongo import NotasRepositoryMongo
@@ -43,11 +42,32 @@ class CrearNota(graphene.Mutation):
         
         # Retornar la ID de la nota y éxito
         return CrearNota(id=nota_id, success=True)
+    
+class EliminarNota(Mutation):
+    class Arguments:
+        id = graphene.ID(required=True)
+
+    id = graphene.ID()
+    message = graphene.String()    
+
+    def mutate(self, info, id):
+        # Validar las credenciales del usuario
+        email = request.headers.get('email')
+        password = request.headers.get('password')
+
+        if not user_repo.validar_credenciales(email, password):
+            raise Exception("Credenciales inválidas")
+
+        if (nota_repo.borrar_nota(id, email) == 0):
+            return (EliminarNota(id, "La nota no se ha podido eliminar"))
+        else:
+            return (EliminarNota(id, "Nota eliminada"))
 
 
 
 class Mutations(graphene.ObjectType):
     CrearNota = CrearNota.Field()
+    EliminarNota = EliminarNota.Field()
 
 # Define las consultas (queries)
 class Query(graphene.ObjectType):
