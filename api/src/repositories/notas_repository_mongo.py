@@ -11,6 +11,8 @@ class NotasRepositoryMongo:
         self.db = self.client["Notas"]
         self.notas_collection = self.db["notas"]
 
+
+
     def crear_nota(self, titulo, texto, isTerminado, isImportante, email_usuario):
 
         fecha_actual = datetime.now()

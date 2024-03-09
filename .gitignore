@@ -1,8 +1,7 @@
 # Created by https://www.toptal.com/developers/gitignore/api/python,flask
 # Edit at https://www.toptal.com/developers/gitignore?templates=python,flask
 
-data/
-
+data
 ### Flask ###
 instance/*
 !instance/.gitignore
@@ -32,6 +31,7 @@ parts/
 sdist/
 var/
 wheels/
+data/
 share/python-wheels/
 *.egg-info/
 .installed.cfg
