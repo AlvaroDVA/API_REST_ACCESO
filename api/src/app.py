@@ -341,16 +341,15 @@ def borrarUsuario():
         
 
         confirmacion = request.json.get('confirmacion')
-        if confirmacion is None:
+        if confirmacion is False:
             return jsonify({"message": "Falta la confirmacion de borrado 'True'"})
-        confirmacion_bool = confirmacion.lower() == "true"
-
+        
         # Validar las credenciales del usuario
         if user_repo.validar_credenciales(email, passw) == 0:
             return jsonify({"error": "Credenciales inválidas"}), 401  # Unauthorized
 
         # Borrar todas las notas del usuario
-        if nota_repo.delete_all_notas(email, confirmacion_bool):
+        if nota_repo.delete_all_notas(email, confirmacion):
             # Si se borran las notas, proceder a borrar el usuario
             if user_repo.borrar_usuario(email):
                 return jsonify({"message": "Usuario borrado correctamente"}), 200
