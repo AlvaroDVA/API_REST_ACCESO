@@ -1,6 +1,5 @@
 from flask import jsonify
 from pymongo import MongoClient
-from typing import Iterable, Optional
 import models.Nota as Nota
 import uuid
 from datetime import datetime
@@ -10,8 +9,6 @@ class NotasRepositoryMongo:
         self.client = MongoClient('mongodb://root:example@mongodb:27017/')
         self.db = self.client["Notas"]
         self.notas_collection = self.db["notas"]
-
-
 
     def crear_nota(self, titulo, texto, isTerminado, isImportante, email_usuario):
 
