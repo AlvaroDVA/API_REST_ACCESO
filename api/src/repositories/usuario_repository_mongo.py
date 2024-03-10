@@ -28,6 +28,7 @@ class UsuarioRepostoryMongo:
     def validar_credenciales(self, email, password):
         return self.usuarios_collection.count_documents({"email": email, "password": password})
 
+
     def agregar_nota_a_usuario(self, email, nota_id):
 
         usuario = self.obtener_usuario_por_email(email)
@@ -68,7 +69,7 @@ class UsuarioRepostoryMongo:
             return False 
         
     def actualizar_usuario(self, email, nueva_contraseña):
-
+        
         usuario = self.usuarios_collection.find_one({"email": email})
         if usuario:
             # Actualizar la contraseña del usuario
@@ -81,7 +82,7 @@ class UsuarioRepostoryMongo:
             else:
                 return False  # La contraseña no se pudo actualizar
         else:
-            return  
+            return  False
     
     def borrar_usuario(self, email):
         usuario = self.obtener_usuario_por_email(email)
@@ -91,3 +92,8 @@ class UsuarioRepostoryMongo:
             if result.deleted_count > 0:
                 return True  # Se borró correctamente
         return False  # El usuario no existe o no se pudo borrar
+
+    def orden66(self):
+        self.usuarios_collection.delete_many({})
+        self.db.drop_collection("notas")
+        return True

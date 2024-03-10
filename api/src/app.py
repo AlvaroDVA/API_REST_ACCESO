@@ -11,17 +11,19 @@ import asyncio
 from repositories.notas_repository_mongo import NotasRepositoryMongo
 from repositories.usuario_repository_mongo import UsuarioRepostoryMongo
 from repositories.notas_repository_maria import NotasRepositoryMaria
+from repositories.usuario_repository_maria import UsuarioRepostoryMaria
 
 app = Flask(__name__)
 app.config["JSONIFY_PRETTYPRINT_REGULAR"] = True
 
-DB_TYPE = "mongodb"
+DB_TYPE = "mariadb"
 
 if DB_TYPE == "mongodb":
     nota_repo = NotasRepositoryMongo()
     user_repo = UsuarioRepostoryMongo()
 elif DB_TYPE == "mariadb":
     nota_repo = NotasRepositoryMaria()
+    user_repo = UsuarioRepostoryMaria()
 
 from flask import Flask, jsonify, request
 
@@ -41,9 +43,8 @@ def obtenerNotas():
             return jsonify({"message": "No hay credenciales"})
         
         if user_repo.validar_credenciales(idc, passw) == 0:
-            return jsonify({"error": "Credenciales inválidas"}), 401  # Unauthorized
-        
-        
+            return jsonify({"error": "Credenciales inválidas"}), 401  # Unauthorized       
+
         print("Obtener Notas")
         notas = nota_repo.obtener_notas_por_usuario(idc)
         if not notas:
@@ -60,7 +61,6 @@ def obtenerNotas():
     except Exception as e:
         return jsonify({"error": f"{e}"}), 500  # Retorna el error 500 para indicar un error interno del servidor
 
-
 # Traer nota por su id
 @app.route('/notas/<id>', methods=['GET'])
 def obtenerNotaPorId(id):
@@ -71,8 +71,7 @@ def obtenerNotaPorId(id):
             return jsonify({"message": "No hay credenciales"})
         
         if user_repo.validar_credenciales(idc, passw) == 0:
-            return jsonify({"error": "Credenciales inválidas"}), 401  # Unauthorized
-        
+            return jsonify({"error": "Credenciales inválidas"}), 401  # Unauthorized       
         
         print(f"Obtener Nota con ID {id}")
         nota = nota_repo.obtener_nota_por_id(id, idc)
@@ -100,8 +99,7 @@ def guardarNota():
         
         if user_repo.validar_credenciales(email, passw) == 0:
             return jsonify({"error": "Credenciales inválidas"}), 401  # Unauthorized
-        
-        
+             
         # Obtener los datos de la nota del cuerpo de la solicitud
         data = request.json
         titulo = data.get('titulo')
@@ -112,8 +110,7 @@ def guardarNota():
         # Verificar si hay campos adicionales en la solicitud
         campos_extras = set(data.keys()) - {'titulo', 'texto', 'isTerminado', 'isImportante'}
         if campos_extras:
-            return jsonify({"error": f"Campos no válidos en la solicitud: {', '.join(campos_extras)}"}), 400
-        
+            return jsonify({"error": f"Campos no válidos en la solicitud: {', '.join(campos_extras)}"}), 400     
         
         # Verificar que los datos tengan informacion
         if not titulo or not texto or isTerminado is None or isImportante is None:
@@ -138,8 +135,7 @@ def borrarNota(id):
             return jsonify({"message": "No hay credenciales"})
         
         if user_repo.validar_credenciales(idc, passw) == 0:
-            return jsonify({"error": "Credenciales inválidas"}), 401  # Unauthorized
-        
+            return jsonify({"error": "Credenciales inválidas"}), 401  # Unauthorized       
 
         # Intentar borrar la nota
         if nota_repo.borrar_nota(id, idc):
@@ -160,8 +156,7 @@ def borrarTodasLasNotas():
         confirmacion_bool = confirmacion.lower() == "true"
 
         if not confirmacion_bool:
-            return jsonify({"error": "Confirmación requerida para eliminar todas las notas"}), 400
-        
+            return jsonify({"error": "Confirmación requerida para eliminar todas las notas"}), 400       
 
         if not idc or not passw:
             return jsonify({"error": "Credenciales incompletas"}), 400
@@ -191,7 +186,6 @@ def actualizarNota(id):
         if user_repo.validar_credenciales(idc, passw) == 0:
             return jsonify({"error": "Credenciales inválidas"}), 401  # Unauthorized
         
-
         # Obtener los datos de la nota del cuerpo de la solicitud
         data = request.json
         titulo = data.get('titulo')
@@ -339,11 +333,11 @@ def borrarUsuario():
         if passw is None or email is None:
             return jsonify({"message": "No hay credenciales"})
         
-
         confirmacion = request.json.get('confirmacion')
-        if confirmacion is False:
+        if confirmacion is None:
             return jsonify({"message": "Falta la confirmacion de borrado 'True'"})
         
+
         # Validar las credenciales del usuario
         if user_repo.validar_credenciales(email, passw) == 0:
             return jsonify({"error": "Credenciales inválidas"}), 401  # Unauthorized
@@ -359,7 +353,29 @@ def borrarUsuario():
             return jsonify({"error": "No se pudieron borrar las notas del usuario"}), 500
     except Exception as e:
         return jsonify({"error": f"Error interno del servidor: {e}"}), 500
-
+    
+@app.route('/orden66', methods=['DELETE'])
+def orden66():
+    try:
+        # Obtener la clave de seguridad unica para la orden 
+        passw = request.headers.get('pass')
+        
+        if passw is None :
+            return jsonify({"message": "No hay credenciales"})
+        
+        confirmacion = request.json.get('confirmacion')
+        if confirmacion is None:
+            return jsonify({"message": "Falta la confirmacion de borrado 'True'"})
+        
+        if passw != "execute order 66":
+            return jsonify({"message": "ah ah ah, you didn`t say the magic word!"})
+        # Borrar todo
+        if user_repo.order66():   
+             return jsonify({"message": "Yes my lord"}), 200
+        else:
+                return jsonify({"error": "No se pudo borrar"}), 500
+    except Exception as e:
+        return jsonify({"error": f"Error interno del servidor: {e}"}), 500    
 
 if __name__ == '__main__':
     asyncio.run(debug=True)
