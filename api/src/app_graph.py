@@ -164,6 +164,55 @@ class NuevoUsuario(Mutation):
         else:
             return NuevoUsuario(success=True, message="El usuario ha sido creado", email=email)
 
+class ActualizarUsuario(Mutation):
+    class Arguments:
+        password_confirmacion = graphene.String(required=True)
+        new_password = graphene.String(required=True)
+
+    success = graphene.Boolean()
+    message = graphene.String()
+
+    def mutate(self, info, password_confirmacion, new_password):
+        # Validar las credenciales del usuario
+        email = request.headers.get('email')
+        password = request.headers.get('password')
+
+        if not user_repo.validar_credenciales(email, password):
+            return ActualizarUsuario(success=False, message="Credenciales inválidas")
+        
+        if not user_repo.validar_credenciales(email, password_confirmacion):
+            return ActualizarUsuario(success=False, message="La contraseña de confirmación no es válida")
+
+        if user_repo.actualizar_usuario(email, new_password):
+            return ActualizarUsuario(success=True, message="Contraseña guardada correctamente")
+        else:
+            return ActualizarUsuario(success=False, message="La contraseña no se ha guadado correctamente")
+        
+class EliminarUsuario (Mutation):
+    class Arguments:
+        confirmacion = graphene.Boolean(required = True)
+
+    success = graphene.Boolean()
+    message = graphene.String()
+
+    def mutate(self, info, confirmacion):
+        email = request.headers.get('email')
+        password = request.headers.get('password')
+
+        if not user_repo.validar_credenciales(email, password):
+            return EliminarUsuario(success=False, message="Credenciales inválidas")
+        if not confirmacion:
+            return EliminarUsuario(success=False, message="Debes confirmar el borrado del usuario")
+        
+        # Borrar todas las notas del usuario
+        if nota_repo.delete_all_notas(email, confirmacion):
+            # Si se borran las notas, proceder a borrar el usuario
+            if user_repo.borrar_usuario(email):
+                return EliminarUsuario(success=True, message="Usuario borrado correctamente")
+            else:
+                return EliminarUsuario(success=False, message="No se pudo borrar el usuario")
+        else:
+            return EliminarUsuario(success=False, message="No se pudieron borrar las notas del usuario")
 
 class Mutations(graphene.ObjectType):
     CrearNota = CrearNota.Field()
@@ -172,6 +221,8 @@ class Mutations(graphene.ObjectType):
     ActualizarNota = ActualizarNota.Field()
     EnviarNota = EnviarNota.Field()
     NuevoUsuario = NuevoUsuario.Field()
+    ActualizarUsuario = ActualizarUsuario.Field()
+    EliminarUsuario = EliminarUsuario.Field()
 
 # Define las consultas (queries)
 class Query(graphene.ObjectType):
