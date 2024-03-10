@@ -1,7 +1,7 @@
 import mariadb
 from models.usuario import Usuario
 
-class UsuarioRepostoryMaria:
+class UsuarioRepositoryMaria:
     def __init__(self):
         self.table = "notas"
         self.db_user = "ejemplo@gmail.com"

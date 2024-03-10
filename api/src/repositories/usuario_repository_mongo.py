@@ -2,7 +2,7 @@ from pymongo import MongoClient
 
 from models.usuario import Usuario
 
-class UsuarioRepostoryMongo:
+class UsuarioRepositoryMongo:
     def __init__(self):
         self.client = MongoClient('mongodb://root:example@mongodb:27017/')
         self.db = self.client["Notas"]

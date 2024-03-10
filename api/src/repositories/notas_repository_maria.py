@@ -145,11 +145,11 @@ class NotasRepositoryMaria():
             UPDATE notas 
             SET titulo = %s, texto = %s, isTerminado = %s, isImportante = %s, fecha_modificacion = %s
             WHERE _id = %s AND email = %s
-        """, (titulo_actual, contenido_actual, isTerminado_actual, isImportante_actual, datetime.now(), nota_id, email_usuario))
+        """, (titulo_actual, contenido_actual, isTerminado_actual, isImportante_actual, datetime.now().strftime("%Y-%m-%d %H:%M"), nota_id, email_usuario))
         self.conn.commit()
-        rows_affected = self.cursor.rowcount 
         self.close() 
-        return rows_affected > 0  
+        return True
+            
 
     def enviar_nota(self, nota_id, email_usuario_origen, email_usuario_destino):
         self.connect()

@@ -4,23 +4,23 @@ from flask_graphql import GraphQLView
 import graphene
 from graphene import Mutation
 from models.UsuarioType import UsuarioType
-from repositories.usuario_repository_maria import UsuarioRepostoryMaria
+from repositories.usuario_repository_maria import UsuarioRepositoryMaria
 from mappers.mappers import NotaMapper
 
 from models.NotaType import NotaType
 from repositories.notas_repository_maria import NotasRepositoryMaria
 from repositories.notas_repository_mongo import NotasRepositoryMongo
-from repositories.usuario_repository_mongo import UsuarioRepostoryMongo
+from repositories.usuario_repository_mongo import UsuarioRepositoryMongo
 
 # Define las mutaciones
 
 DB_TYPE = "mariadb"
 if DB_TYPE == "mongodb":
     nota_repo = NotasRepositoryMongo()
-    user_repo = UsuarioRepostoryMongo()
+    user_repo = UsuarioRepositoryMongo()
 elif DB_TYPE == "mariadb":
     nota_repo = NotasRepositoryMaria()
-    user_repo = UsuarioRepostoryMaria()
+    user_repo = UsuarioRepositoryMaria()
 
 class CrearNota(graphene.Mutation):
     class Arguments:
@@ -69,7 +69,7 @@ class EliminarNota(Mutation):
         if (nota_repo.borrar_nota(id, email) == 0):
             return (EliminarNota(False, "La nota no se ha podido eliminar"), id)
         else:
-            user_repo.borrar_nota_de_usuario(id)
+            user_repo.borrar_nota_de_usuario(id, email)
             return (EliminarNota(True, "Nota eliminada", id))
 
 class DeleteAll(Mutation):

@@ -9,9 +9,9 @@ from dotenv import dotenv_values
 import asyncio
 
 from repositories.notas_repository_mongo import NotasRepositoryMongo
-from repositories.usuario_repository_mongo import UsuarioRepostoryMongo
+from repositories.usuario_repository_mongo import UsuarioRepositoryMongo
 from repositories.notas_repository_maria import NotasRepositoryMaria
-from repositories.usuario_repository_maria import UsuarioRepostoryMaria
+from repositories.usuario_repository_maria import UsuarioRepositoryMaria
 
 app = Flask(__name__)
 app.config["JSONIFY_PRETTYPRINT_REGULAR"] = True
@@ -20,10 +20,10 @@ DB_TYPE = "mariadb"
 
 if DB_TYPE == "mongodb":
     nota_repo = NotasRepositoryMongo()
-    user_repo = UsuarioRepostoryMongo()
+    user_repo = UsuarioRepositoryMongo()
 elif DB_TYPE == "mariadb":
     nota_repo = NotasRepositoryMaria()
-    user_repo = UsuarioRepostoryMaria()
+    user_repo = UsuarioRepositoryMaria()
 
 from flask import Flask, jsonify, request
 
@@ -37,16 +37,16 @@ app.config["JSONIFY_PRETTYPRINT_REGULAR"] = True
 @app.route('/notas', methods=['GET'])
 def obtenerNotas():
     try:
-        idc = request.headers.get('email')
+        email = request.headers.get('email')
         passw = request.headers.get('pass')
-        if passw is None or idc is None:
+        if passw is None or email is None:
             return jsonify({"message": "No hay credenciales"})
         
-        if user_repo.validar_credenciales(idc, passw) == 0:
+        if user_repo.validar_credenciales(email, passw) == 0:
             return jsonify({"error": "Credenciales inválidas"}), 401  # Unauthorized       
 
         print("Obtener Notas")
-        notas = nota_repo.obtener_notas_por_usuario(idc)
+        notas = nota_repo.obtener_notas_por_usuario(email)
         if not notas:
             return jsonify({"error": "No se han encontrado más notas"})
         
@@ -65,16 +65,16 @@ def obtenerNotas():
 @app.route('/notas/<id>', methods=['GET'])
 def obtenerNotaPorId(id):
     try:
-        idc = request.headers.get('email')
+        email = request.headers.get('email')
         passw = request.headers.get('pass')
-        if passw is None or idc is None:
+        if passw is None or email is None:
             return jsonify({"message": "No hay credenciales"})
         
-        if user_repo.validar_credenciales(idc, passw) == 0:
+        if user_repo.validar_credenciales(email, passw) == 0:
             return jsonify({"error": "Credenciales inválidas"}), 401  # Unauthorized       
         
         print(f"Obtener Nota con ID {id}")
-        nota = nota_repo.obtener_nota_por_id(id, idc)
+        nota = nota_repo.obtener_nota_por_id(id, email)
         if nota is None:
             return jsonify({"error": "No se ha encontrado la nota"})
         
@@ -129,17 +129,17 @@ def guardarNota():
 @app.route('/notas/<id>', methods=['DELETE'])
 def borrarNota(id):
     try:
-        idc = request.headers.get('email')
+        email = request.headers.get('email')
         passw = request.headers.get('pass')
-        if passw is None or idc is None:
+        if passw is None or email is None:
             return jsonify({"message": "No hay credenciales"})
         
-        if user_repo.validar_credenciales(idc, passw) == 0:
+        if user_repo.validar_credenciales(email, passw) == 0:
             return jsonify({"error": "Credenciales inválidas"}), 401  # Unauthorized       
 
         # Intentar borrar la nota
-        if nota_repo.borrar_nota(id, idc):
-            user_repo.borrar_nota_de_usuario(idc, id)
+        if nota_repo.borrar_nota(id, email):
+            user_repo.borrar_nota_de_usuario(email, id)
             return jsonify({"message": "Nota eliminada correctamente"})
         else:
             return jsonify({"error": "No se ha encontrado la nota o no tienes permiso para borrarla"})
@@ -151,22 +151,22 @@ def borrarNota(id):
 def borrarTodasLasNotas():
     try:
         confirmacion = request.json.get('confirmacion')
-        idc = request.headers.get('email')
+        email = request.headers.get('email')
         passw = request.headers.get('pass')
         confirmacion_bool = confirmacion == True
 
         if not confirmacion_bool:
             return jsonify({"error": "Confirmación requerida para eliminar todas las notas"}), 400       
 
-        if not idc or not passw:
+        if not email or not passw:
             return jsonify({"error": "Credenciales incompletas"}), 400
 
-        if user_repo.validar_credenciales(idc, passw) == 0:
+        if user_repo.validar_credenciales(email, passw) == 0:
             return jsonify({"error": "Credenciales inválidas"}), 401  # Unauthorized
         
         # Intentar borrar todas las notas del usuario
-        if nota_repo.delete_all_notas(idc, confirmacion_bool):
-            user_repo.borrar_todas_las_notas_de_usuario(idc)
+        if nota_repo.delete_all_notas(email, confirmacion_bool):
+            user_repo.borrar_todas_las_notas_de_usuario(email)
             return jsonify({"message": "Todas las notas fueron eliminadas correctamente"})
         else:
             return jsonify({"message": "Borrado de todas las notas cancelado"})
@@ -178,12 +178,12 @@ def borrarTodasLasNotas():
 def actualizarNota(id):
     try:
         # Obtener el correo electrónico del usuario de los encabezados de la solicitud
-        idc = request.headers.get('email')
+        email = request.headers.get('email')
         passw = request.headers.get('pass')
-        if passw is None or idc is None:
+        if passw is None or email is None:
             return jsonify({"error": "Credenciales incompletas"}), 400
         
-        if user_repo.validar_credenciales(idc, passw) == 0:
+        if user_repo.validar_credenciales(email, passw) == 0:
             return jsonify({"error": "Credenciales inválidas"}), 401  # Unauthorized
         
         # Obtener los datos de la nota del cuerpo de la solicitud
@@ -198,7 +198,7 @@ def actualizarNota(id):
             return jsonify({"error": f"Campos no válidos en la solicitud: {', '.join(campos_extras)}"}), 400
         
         # Intentar actualizar la nota
-        if nota_repo.actualizar_nota(id, idc, titulo, texto, isTerminado, isImportante):
+        if nota_repo.actualizar_nota(id, email, titulo, texto, isTerminado, isImportante):
             return jsonify({"message": "Nota actualizada correctamente"})
         else:
             return jsonify({"error": "No se ha encontrado la nota o no tienes permiso para actualizarla"})
@@ -208,12 +208,12 @@ def actualizarNota(id):
 @app.route('/notas/enviar/<id>', methods=['POST'])
 def enviarNota(id):
     try:
-        idc = request.headers.get('email')
+        email = request.headers.get('email')
         passw = request.headers.get('pass')
-        if passw is None or idc is None:
+        if passw is None or email is None:
             return jsonify({"error": "Credenciales incompletas"}), 400
         
-        if user_repo.validar_credenciales(idc, passw) == 0:
+        if user_repo.validar_credenciales(email, passw) == 0:
             return jsonify({"error": "Credenciales inválidas"}), 401  
         
         # Unauthorized
@@ -229,7 +229,7 @@ def enviarNota(id):
             return jsonify({"error": "El usuario destinatario no existe"}), 404  # Not Found
 
         # Llamar al repositorio de notas para enviar una copia de la nota
-        nueva_nota_id = nota_repo.enviar_nota(id, idc, email_destino)
+        nueva_nota_id = nota_repo.enviar_nota(id, email, email_destino)
 
         if nueva_nota_id:
             user_repo.agregar_nota_a_usuario(email_destino,nueva_nota_id)
@@ -268,15 +268,15 @@ def crearUsuario():
 def obtenerUsuario():
     try:
 
-        idc = request.headers.get('email')
+        email = request.headers.get('email')
         passw = request.headers.get('pass')
-        if passw is None or idc is None:
+        if passw is None or email is None:
             return jsonify({"message": "No hay credenciales"})
         
-        if user_repo.validar_credenciales(idc, passw) == 0:
+        if user_repo.validar_credenciales(email, passw) == 0:
             return jsonify({"error": "Credenciales inválidas"}), 401  # Unauthorized
 
-        usuario = user_repo.obtener_usuario_por_email(idc)
+        usuario = user_repo.obtener_usuario_por_email(email)
         if usuario:
             # Extraer el email y la lista de IDs de notas del usuario
             email_usuario = usuario.get("email")
