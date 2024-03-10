@@ -1,6 +1,6 @@
 import graphene
 
 
-class UserType(graphene.ObjectType):
+class UsuarioType(graphene.ObjectType):
     email = graphene.String()
     notas = graphene.List(graphene.ID)

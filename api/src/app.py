@@ -16,7 +16,7 @@ from repositories.usuario_repository_maria import UsuarioRepostoryMaria
 app = Flask(__name__)
 app.config["JSONIFY_PRETTYPRINT_REGULAR"] = True
 
-DB_TYPE = "mariadb"
+DB_TYPE = "mongodb"
 
 if DB_TYPE == "mongodb":
     nota_repo = NotasRepositoryMongo()

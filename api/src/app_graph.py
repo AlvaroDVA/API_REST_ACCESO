@@ -3,6 +3,8 @@ from flask import Flask, request
 from flask_graphql import GraphQLView
 import graphene
 from graphene import Mutation
+from models.UsuarioType import UsuarioType
+from repositories.usuario_repository_maria import UsuarioRepostoryMaria
 from mappers.mappers import NotaMapper
 
 from models.NotaType import NotaType
@@ -18,6 +20,7 @@ if DB_TYPE == "mongodb":
     user_repo = UsuarioRepostoryMongo()
 elif DB_TYPE == "mariadb":
     nota_repo = NotasRepositoryMaria()
+    user_repo = UsuarioRepostoryMaria()
 
 class CrearNota(graphene.Mutation):
     class Arguments:
@@ -41,6 +44,7 @@ class CrearNota(graphene.Mutation):
         # Crear la nota y obtener su ID
         nota_id = nota_repo.crear_nota(titulo, texto, isImportante, isTerminado, email)
         if nota_id:
+            user_repo.agregar_nota_a_usuario(email, nota_id)
             return CrearNota(success=True, message="Nota Guardada" ,id=nota_id)
         # Retornar la ID de la nota y éxito
         else:
@@ -65,6 +69,7 @@ class EliminarNota(Mutation):
         if (nota_repo.borrar_nota(id, email) == 0):
             return (EliminarNota(False, "La nota no se ha podido eliminar"), id)
         else:
+            user_repo.borrar_nota_de_usuario(id)
             return (EliminarNota(True, "Nota eliminada", id))
 
 class DeleteAll(Mutation):
@@ -141,6 +146,23 @@ class EnviarNota (Mutation):
         else:
             return (EnviarNota(success=True, message="La nota ha sido enviada correctamente", id=id_nota_enviada))  
 
+class NuevoUsuario(Mutation):
+    class Arguments:
+        email = graphene.String(required=True)
+        password = graphene.String(required=True)
+
+    success = graphene.Boolean()
+    message = graphene.String()
+    email = graphene.ID()
+
+    def mutate(self,info, email, password):
+        if not user_repo.obtener_usuario_por_email(email) is None:
+            return NuevoUsuario(success=False, message="Ya existe un usuario con este email", email=email)
+        
+        if user_repo.crear_usuario(email, password) is None:
+            return NuevoUsuario(success=False, message="El usuario no ha podido crearse", email=email)
+        else:
+            return NuevoUsuario(success=True, message="El usuario ha sido creado", email=email)
 
 
 class Mutations(graphene.ObjectType):
@@ -149,10 +171,13 @@ class Mutations(graphene.ObjectType):
     DeleteAll = DeleteAll.Field()
     ActualizarNota = ActualizarNota.Field()
     EnviarNota = EnviarNota.Field()
+    NuevoUsuario = NuevoUsuario.Field()
 
 # Define las consultas (queries)
 class Query(graphene.ObjectType):
     notas = graphene.List(NotaType)
+    nota_por_id = graphene.Field(NotaType, id=graphene.ID(required=True))
+    usuario = graphene.Field(UsuarioType)
     
     def resolve_notas(self, notas):
         
@@ -163,6 +188,26 @@ class Query(graphene.ObjectType):
             raise Exception("Credenciales inválidas")
         notas = nota_repo.obtener_notas_por_usuario(email)
         return [NotaMapper.map_nota_to_notatype(nota) for nota in notas]
+    
+    def resolve_nota_por_id(self, info, id):
+        email = request.headers.get('email')
+        password = request.headers.get('password')
+
+        if not user_repo.validar_credenciales(email, password):
+            raise Exception("Credenciales inválidas")
+        nota = nota_repo.obtener_nota_por_id(id, email)
+        return NotaMapper.map_nota_to_notatype(nota)
+    
+    def resolve_usuario(self, usuario):
+        email = request.headers.get('email')
+        password = request.headers.get('password')
+
+        if not user_repo.validar_credenciales(email, password):
+            raise Exception("Credenciales inválidas")
+
+        return user_repo.obtener_usuario_por_email(email)
+        
+
 
 
 schema = graphene.Schema(query=Query, mutation=Mutations)
