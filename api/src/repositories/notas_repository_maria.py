@@ -8,8 +8,8 @@ import models.Nota as nota
 class NotasRepositoryMaria():
     def __init__(self):
         self.table = "notas"
-        self.db_user = "ejemplo@gmail.com"
-        self.db_password = "mazosegura1234"
+        self.db_user = "root@example.com"
+        self.db_password = "12345"
         print("Connecting...")      
         self.connect()
         self.create_tables()
@@ -30,26 +30,26 @@ class NotasRepositoryMaria():
             print(f"Error {e}") 
 
     def create_tables(self):
-       self.cursor.execute(f"CREATE TABLE IF NOT EXISTS users (user_id VARCHAR(100) PRIMARY KEY,password VARCHAR(100))")
-       self.cursor.execute(f"CREATE TABLE IF NOT EXISTS notas (id VARCHAR(100) PRIMARY KEY, titulo VARCHAR(100), contenido VARCHAR(255), fecha_creacion VARCHAR(100),fecha_modificacion VARCHAR(100), isTerminado BOOLEAN, isImportante BOOLEAN, user_id VARCHAR(100), FOREIGN KEY (user_id) REFERENCES users(user_id))")
+       self.cursor.execute(f"CREATE TABLE IF NOT EXISTS users (email VARCHAR(100) PRIMARY KEY,password VARCHAR(100))")
+       self.cursor.execute(f"CREATE TABLE IF NOT EXISTS notas (_id VARCHAR(100) PRIMARY KEY, titulo VARCHAR(100), texto VARCHAR(255), fecha_creacion VARCHAR(100),fecha_modificacion VARCHAR(100), isTerminado BOOLEAN, isImportante BOOLEAN, email VARCHAR(100), FOREIGN KEY (email) REFERENCES users(email))")
        self.conn.commit()
        self.close()
 
     def create_user(self):
         self.connect()
-        self.cursor.execute(f"INSERT IGNORE INTO users (user_id) VALUES (?)", (self.db_user,))
+        self.cursor.execute(f"INSERT IGNORE INTO users (email) VALUES (?)", (self.db_user,))
         self.conn.commit()
         self.close()
 
     def obtener_notas_por_usuario(self, email_usuario):
         notas = []  # Inicializar la lista de notas
         self.connect()
-        self.cursor.execute(f"SELECT * FROM notas WHERE user_id = '{email_usuario}'")
+        self.cursor.execute(f"SELECT * FROM notas WHERE email = '{email_usuario}'")
         for nota in self.cursor:
             nota_obj = {
-                "id": nota[0],
+                "_id": nota[0],
                 "titulo": nota[1],
-                "contenido": nota[2],
+                "texto": nota[2],
                 "fecha_creacion": nota[3],
                 "fecha_modificacion": nota[4],
                 "isTerminado": bool(nota[5]),
@@ -61,14 +61,14 @@ class NotasRepositoryMaria():
 
     def obtener_nota_por_id(self,nota_id, usuario_email):
         self.connect()
-        self.cursor.execute(f"SELECT * FROM notas WHERE user_id = '{usuario_email}' AND id = '{nota_id}'")
+        self.cursor.execute(f"SELECT * FROM notas WHERE email = '{usuario_email}' AND _id = '{nota_id}'")
         nota = self.cursor.fetchone()
         self.close()
         if nota is not None:
             nota_obj = {
-                "id": nota[0],
+                "_id": nota[0],
                 "titulo": nota[1],
-                "contenido": nota[2],
+                "texto": nota[2],
                 "fecha_creacion": nota[3],
                 "fecha_modificacion": nota[4],
                 "isTerminado": bool(nota[5]),
@@ -85,15 +85,15 @@ class NotasRepositoryMaria():
          "_id": uuid.uuid4().hex,
          "titulo": titulo,
          "texto": texto,
-         "fechaCreacion": fecha_actual.strftime("%Y-%m-%d %H:%M:"),
-         "fechaUltimaModifcacion": fecha_actual.strftime("%Y-%m-%d %H:%M:"),
+         "fechaCreacion": fecha_actual.strftime("%Y-%m-%d %H:%M"),
+         "fechaUltimaModifcacion": fecha_actual.strftime("%Y-%m-%d %H:%M"),
          "isTerminado": isTerminado,
          "isImportante": isImportante,
          "email_usuario": email_usuario
      }
      data = (nota["_id"], nota["titulo"], nota["texto"], nota["fechaCreacion"], isTerminado, isImportante, nota["fechaCreacion"], email_usuario)
      self.connect()
-     self.cursor.execute(f"INSERT INTO notas (id, titulo, contenido, fecha_creacion, isTerminado, isImportante, fecha_modificacion, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", data)
+     self.cursor.execute(f"INSERT INTO notas (_id, titulo, texto, fecha_creacion, isTerminado, isImportante, fecha_modificacion, email) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", data)
      self.conn.commit()
      if self.cursor.rowcount > 0:
          self.close()
@@ -103,7 +103,7 @@ class NotasRepositoryMaria():
 
     def borrar_nota(self, nota_id,usuario_email):
         self.connect()
-        self.cursor.execute(f"DELETE FROM notas WHERE id = '{nota_id}'")
+        self.cursor.execute(f"DELETE FROM notas WHERE _id = '{nota_id}' AND email = '{usuario_email}'")
         rows_affected = self.cursor.rowcount  
         self.conn.commit()
         self.close()
@@ -116,7 +116,7 @@ class NotasRepositoryMaria():
     def delete_all_notas(self, usuario_email, confirmacion):
         if confirmacion:
              self.connect()
-             self.cursor.execute(f"DELETE FROM notas WHERE user_id = '{usuario_email}'")
+             self.cursor.execute(f"DELETE FROM notas WHERE email = '{usuario_email}'")
              self.conn.commit()
              self.close()
              return True
@@ -125,13 +125,13 @@ class NotasRepositoryMaria():
        
     def actualizar_nota(self, nota_id, email_usuario, titulo=None, texto=None, isTerminado=None, isImportante=None):
         self.connect()
-        self.cursor.execute(f"SELECT * FROM notas WHERE id = '{nota_id}' AND user_id = '{email_usuario}'")
+        self.cursor.execute(f"SELECT * FROM notas WHERE _id = '{nota_id}' AND email = '{email_usuario}'")
         nota = self.cursor.fetchone()
         if not nota:
             self.close()
             return False  
 
-        id_nota, titulo_actual, contenido_actual, fecha_creacion, fecha_modificacion, isTerminado_actual, isImportante_actual, user_id = nota
+        id_nota, titulo_actual, contenido_actual, fecha_creacion, fecha_modificacion, isTerminado_actual, isImportante_actual, email = nota
 
         if titulo is not None:
             titulo_actual = titulo
@@ -143,8 +143,8 @@ class NotasRepositoryMaria():
             isImportante_actual = isImportante
         self.cursor.execute("""
             UPDATE notas 
-            SET titulo = %s, contenido = %s, isTerminado = %s, isImportante = %s, fecha_modificacion = %s
-            WHERE id = %s AND user_id = %s
+            SET titulo = %s, texto = %s, isTerminado = %s, isImportante = %s, fecha_modificacion = %s
+            WHERE _id = %s AND email = %s
         """, (titulo_actual, contenido_actual, isTerminado_actual, isImportante_actual, datetime.now(), nota_id, email_usuario))
         self.conn.commit()
         rows_affected = self.cursor.rowcount 
@@ -153,7 +153,7 @@ class NotasRepositoryMaria():
 
     def enviar_nota(self, nota_id, email_usuario_origen, email_usuario_destino):
         self.connect()
-        self.cursor.execute(f"SELECT * FROM users WHERE user_id = '{email_usuario_destino}'")
+        self.cursor.execute(f"SELECT * FROM users WHERE email = '{email_usuario_destino}'")
         destinatario_existente = self.cursor.fetchone()
         self.close()
         if not destinatario_existente:
@@ -162,9 +162,9 @@ class NotasRepositoryMaria():
         if nota:
             self.connect()
             self.cursor.execute("""
-                INSERT INTO notas (titulo, contenido, fecha_creacion, fecha_modificacion, isTerminado, isImportante, user_id)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
-            """, (nota['titulo'], nota['contenido'], nota['fecha_creacion'], nota['fecha_modificacion'], nota['isTerminado'], nota['isImportante'], email_usuario_destino))
+                INSERT INTO notas (_id,titulo, texto, fecha_creacion, fecha_modificacion, isTerminado, isImportante, email)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            """, (uuid.uuid4(), nota['titulo'], nota['texto'], nota['fecha_creacion'], nota['fecha_modificacion'], nota['isTerminado'], nota['isImportante'], email_usuario_destino))
             self.conn.commit()
             self.close()  
             nota['usuario'] = email_usuario_destino

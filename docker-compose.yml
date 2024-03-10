@@ -19,6 +19,8 @@ services:
     environment:
       MARIADB_ROOT_PASSWORD: example
       MARIADB_DATABASE: testdb
+    volumes:
+      - ./data2:/data2/db
 
   api_rest:
     build:

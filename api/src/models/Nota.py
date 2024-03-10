@@ -21,7 +21,7 @@ class Nota:
 
     def to_dict(self):
         return {
-            "id": str(self.id),
+            "_id": str(self.id),
             "titulo": self.titulo,
             "texto": self.texto,
             "fechaCreacion": self.fechaCreacion,

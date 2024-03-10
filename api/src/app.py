@@ -16,7 +16,7 @@ from repositories.usuario_repository_maria import UsuarioRepostoryMaria
 app = Flask(__name__)
 app.config["JSONIFY_PRETTYPRINT_REGULAR"] = True
 
-DB_TYPE = "mongodb"
+DB_TYPE = "mariadb"
 
 if DB_TYPE == "mongodb":
     nota_repo = NotasRepositoryMongo()
@@ -153,7 +153,7 @@ def borrarTodasLasNotas():
         confirmacion = request.json.get('confirmacion')
         idc = request.headers.get('email')
         passw = request.headers.get('pass')
-        confirmacion_bool = confirmacion.lower() == "true"
+        confirmacion_bool = confirmacion == True
 
         if not confirmacion_bool:
             return jsonify({"error": "Confirmación requerida para eliminar todas las notas"}), 400       

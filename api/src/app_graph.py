@@ -14,7 +14,7 @@ from repositories.usuario_repository_mongo import UsuarioRepostoryMongo
 
 # Define las mutaciones
 
-DB_TYPE = "mongodb"
+DB_TYPE = "mariadb"
 if DB_TYPE == "mongodb":
     nota_repo = NotasRepositoryMongo()
     user_repo = UsuarioRepostoryMongo()
@@ -153,7 +153,7 @@ class NuevoUsuario(Mutation):
 
     success = graphene.Boolean()
     message = graphene.String()
-    email = graphene.ID()
+    email = graphene.String()
 
     def mutate(self,info, email, password):
         if not user_repo.obtener_usuario_por_email(email) is None:
