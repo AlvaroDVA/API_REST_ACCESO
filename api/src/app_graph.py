@@ -14,7 +14,7 @@ from repositories.usuario_repository_mongo import UsuarioRepositoryMongo
 
 # Define las mutaciones
 
-DB_TYPE = "mariadb"
+DB_TYPE = "mongodb"
 if DB_TYPE == "mongodb":
     nota_repo = NotasRepositoryMongo()
     user_repo = UsuarioRepositoryMongo()
@@ -247,6 +247,8 @@ class Query(graphene.ObjectType):
         if not user_repo.validar_credenciales(email, password):
             raise Exception("Credenciales inválidas")
         nota = nota_repo.obtener_nota_por_id(id, email)
+        if nota is None:
+            raise Exception("No hay nota con esta id o no te pertenece")
         return NotaMapper.map_nota_to_notatype(nota)
     
     def resolve_usuario(self, usuario):

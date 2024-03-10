@@ -30,7 +30,7 @@ class UsuarioRepositoryMaria:
 
     def create_tables(self):
        self.cursor.execute(f"CREATE TABLE IF NOT EXISTS users (email VARCHAR(100) PRIMARY KEY,password VARCHAR(100))")
-       self.cursor.execute(f"CREATE TABLE IF NOT EXISTS notas (_id VARCHAR(100) PRIMARY KEY, titulo VARCHAR(100), texto VARCHAR(255), fecha_creacion VARCHAR(100),fecha_modificacion VARCHAR(100), isTerminado BOOLEAN, isImportante BOOLEAN, email VARCHAR(100), FOREIGN KEY (email) REFERENCES users(email))")
+       self.cursor.execute(f"CREATE TABLE IF NOT EXISTS notas (_id VARCHAR(100) PRIMARY KEY, titulo VARCHAR(100), texto VARCHAR(255), fechaCreacion VARCHAR(100),fechaUltimaModificacion VARCHAR(100), isTerminado BOOLEAN, isImportante BOOLEAN, email VARCHAR(100), FOREIGN KEY (email) REFERENCES users(email))")
        self.conn.commit()
        self.close()
 

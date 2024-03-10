@@ -25,14 +25,6 @@ elif DB_TYPE == "mariadb":
     nota_repo = NotasRepositoryMaria()
     user_repo = UsuarioRepositoryMaria()
 
-from flask import Flask, jsonify, request
-
-# Asegúrate de importar tus clases y módulos necesarios aquí
-from pymongo.errors import PyMongoError
-
-app = Flask(__name__)
-app.config["JSONIFY_PRETTYPRINT_REGULAR"] = True
-
 # Obtener todas las notas del usuario  
 @app.route('/notas', methods=['GET'])
 def obtenerNotas():
@@ -354,8 +346,8 @@ def borrarUsuario():
     except Exception as e:
         return jsonify({"error": f"Error interno del servidor: {e}"}), 500
     
-@app.route('/orden66', methods=['DELETE'])
-def orden66():
+@app.route('/deleteTodo', methods=['DELETE'])
+def deleteTodo():
     try:
         # Obtener la clave de seguridad unica para la orden 
         passw = request.headers.get('pass')
