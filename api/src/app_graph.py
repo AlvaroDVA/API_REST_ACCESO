@@ -36,13 +36,15 @@ class CrearNota(graphene.Mutation):
         password = request.headers.get('password')
 
         if not user_repo.validar_credenciales(email, password):
-            return CrearNota(success=True, message="Credenciales inválidas" , id=id)
+            return CrearNota(success=False, message="Credenciales inválidas" , id=id)
 
         # Crear la nota y obtener su ID
         nota_id = nota_repo.crear_nota(titulo, texto, isImportante, isTerminado, email)
-        
+        if nota_id:
+            return CrearNota(success=True, message="Nota Guardada" ,id=nota_id)
         # Retornar la ID de la nota y éxito
-        return CrearNota(success=True, message="Nota Guardada" ,id=nota_id)
+        else:
+            return CrearNota(success=False, message="No se ha podido guardar la nota", id=nota_id)
     
 class EliminarNota(Mutation):
     class Arguments:
@@ -113,8 +115,32 @@ class ActualizarNota(Mutation):
         else:
             return ActualizarNota(success=False, message="No se ha podido actualizar la nota")
 
+class EnviarNota (Mutation):
+    class Arguments:
+        id = graphene.ID(required=True)
+        email_destino = graphene.String(required=True)
 
+    success = graphene.Boolean()
+    message = graphene.String()
+    id = graphene.ID()
+
+    def mutate(self, info, id, email_destino):
+        # Validar las credenciales del usuario
+        email = request.headers.get('email')
+        password = request.headers.get('password')
+
+        if not user_repo.validar_credenciales(email, password):
+            return EnviarNota(success=False, message="Credenciales inválidas")
         
+        if user_repo.obtener_usuario_por_email(email_destino) is None:
+            return EnviarNota(success=False, message="El usuario receptor no existe")
+        
+        id_nota_enviada = nota_repo.enviar_nota(id,email,email_destino)
+        if id_nota_enviada is None:
+            return (EnviarNota(success=False, message="La nota no se ha podido enviar debido a un error o que no le pertenece")) 
+        else:
+            return (EnviarNota(success=True, message="La nota ha sido enviada correctamente", id=id_nota_enviada))  
+
 
 
 class Mutations(graphene.ObjectType):
@@ -122,6 +148,7 @@ class Mutations(graphene.ObjectType):
     EliminarNota = EliminarNota.Field()
     DeleteAll = DeleteAll.Field()
     ActualizarNota = ActualizarNota.Field()
+    EnviarNota = EnviarNota.Field()
 
 # Define las consultas (queries)
 class Query(graphene.ObjectType):
